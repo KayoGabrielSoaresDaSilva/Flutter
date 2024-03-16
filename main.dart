@@ -20,8 +20,83 @@ class MeuAplicativo extends StatelessWidget {
       theme: ThemeData(
           primarySwatch:
               Colors.red), // Define o tema do aplicativo com a cor vermelha
+
       home:
-          const MoedasPage(), // Define a página inicial do aplicativo como MoedasPage
+          const HomePage(), // Define a página inicial do aplicativo como MoedasPage
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int paginaAtual = 0;
+  late PageController pc;
+
+  @override
+  void initState() {
+    super.initState();
+    pc = PageController(initialPage: paginaAtual);
+  }
+
+  setPaginaAtual(pagina) {
+    setState(() {
+      paginaAtual = pagina;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: PageView(
+        controller: pc,
+        children: const [
+          MoedasPage(),
+          FavoritasPage(),
+        ],
+        onPageChanged: setPaginaAtual,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: paginaAtual,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Todas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Favoritas',
+          ),
+        ],
+        onTap: (pagina) {
+          pc.animateToPage(pagina,
+              duration: const Duration(milliseconds: 400), curve: Curves.ease);
+        },
+        backgroundColor: Colors.grey[100],
+      ),
+    );
+  }
+}
+
+class FavoritasPage extends StatefulWidget {
+  const FavoritasPage({super.key});
+
+  @override
+  State<FavoritasPage> createState() => _FavoritasPageState();
+}
+
+class _FavoritasPageState extends State<FavoritasPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Moedas Favoritas'),
+      ),
     );
   }
 }
@@ -60,13 +135,17 @@ class _MoedasPageState extends State<MoedasPage> {
             });
           },
         ),
+
         title: Text(
             '${selecionadas.length} selecionadas'), // Título da barra de aplicativo mostrando o número de moedas selecionadas
+
         backgroundColor: Colors
             .blueGrey, // Cor de fundo da barra de aplicativo quando moedas estão selecionadas
+
         iconTheme: const IconThemeData(
             color:
                 Colors.black), // Define a cor dos ícones na barra de aplicativo
+
         titleTextStyle: const TextStyle(
             color: Colors.black,
             fontSize: 20), // Define o estilo do texto do título
@@ -74,11 +153,14 @@ class _MoedasPageState extends State<MoedasPage> {
     }
   }
 
+  // Função responsável por navegar para a tela de detalhes de uma moeda
   // ignore: non_constant_identifier_names
   tela_de_detalhes(Moeda moeda) {
+    // Utiliza o Navigator para navegar para a próxima tela
     Navigator.push(
         context,
         MaterialPageRoute(
+            // Define a rota da próxima tela e passa a moeda como argumento
             builder: (_) => mostrar_detalhes(
                   moeda: moeda,
                 )));
@@ -92,16 +174,19 @@ class _MoedasPageState extends State<MoedasPage> {
 
     return Scaffold(
       appBar: appBarDinamica(), // Define a AppBar
+
       body: ListView.separated(
         itemBuilder: (BuildContext context, int moeda) {
           return ListTile(
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(
                     Radius.circular(13))), // Define a forma do tile
+
             leading: (selecionadas.contains(tabela[moeda]))
                 ? const CircleAvatar(
                     child: Icon(Icons
                         .check)) // Ícone de marca de seleção se a moeda estiver selecionada
+
                 : SizedBox(
                     width: 40,
                     child: Image.asset(tabela[moeda].icone),
@@ -129,12 +214,17 @@ class _MoedasPageState extends State<MoedasPage> {
                 (selecionadas.contains(tabela[moeda]))
                     ? selecionadas.remove(tabela[
                         moeda]) // Remove a moeda das selecionadas ao pressionar e segurar
+
                     : selecionadas.add(tabela[
                         moeda]); // Adiciona a moeda às selecionadas ao pressionar e segurar
               });
             },
 
-            onTap: () => tela_de_detalhes(tabela[moeda]),
+            onTap: () => tela_de_detalhes(
+                // Quando o usuário tocar neste widget...
+                tabela[
+                    moeda] // ...chame a função tela_de_detalhes com o valor associado à chave 'moeda' na tabela.
+                ),
           );
         },
 
@@ -150,7 +240,9 @@ class _MoedasPageState extends State<MoedasPage> {
               // Se houver moedas selecionadas, exibe um botão flutuante estendido
               onPressed:
                   () {}, // Define a função a ser executada quando o botão for pressionado (no caso, uma função vazia)
+
               label: const Text('favoritar'), // Define o texto exibido no botão
+
               icon: const Icon(Icons
                   .star), // Define o ícone exibido no botão (no caso, o ícone de estrela)
             )
@@ -173,17 +265,27 @@ class mostrar_detalhes extends StatefulWidget {
 
 // ignore: camel_case_types
 class _mostrar_detalhesState extends State<mostrar_detalhes> {
+  // Criando uma instância de NumberFormat para formatar valores monetários
   NumberFormat real = NumberFormat.currency(locale: 'pt_BR', name: 'R\$');
+
+  // Chave global para o formulário
   final _form = GlobalKey<FormState>();
+
+  // Controlador de texto para capturar a entrada do usuário
   final _valor = TextEditingController();
+
+  // Variável para armazenar a quantidade, inicializada como 0
   double quantidade = 0;
 
-  comprar() {
+  void comprar() {
+    // Verifica se o formulário é válido
     if (_form.currentState!.validate()) {
+      // Fecha a tela atual
       Navigator.pop(context);
 
+      // Mostra uma snackbar informando que a compra foi realizada com sucesso
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Compra realizada com sucesso!')),
+        const SnackBar(content: Text('Compra realizada com sucesso!')),
       );
     }
   }
@@ -191,29 +293,49 @@ class _mostrar_detalhesState extends State<mostrar_detalhes> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Retorna um widget Scaffold que fornece a estrutura básica para a tela
+
       appBar: AppBar(
-        title: Text(widget.moeda.nome),
+        // Barra de aplicativo
+        title: Text(// Título da barra de aplicativo
+            widget.moeda.nome // Título dinâmico baseado no nome da moeda
+            ),
       ),
+
       body: Padding(
-        padding: EdgeInsets.all(24),
+        // Corpo da tela com um espaçamento ao redor
+        padding: const EdgeInsets.all(24),
+
         child: Column(
+          // Coluna para organizar os widgets verticalmente
           children: [
             Padding(
-              padding: EdgeInsets.only(bottom: 24),
+              // Padding ao redor do Row
+
+              padding: const EdgeInsets.only(bottom: 24),
+
               child: Row(
+                // Linha para exibir o ícone e o preço da moeda
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
+
                 children: [
                   SizedBox(
-                    child: Image.asset(widget.moeda.icone),
+                    // Espaço reservado para o ícone da moeda
                     width: 50,
+                    child: Image.asset(
+                        widget.moeda.icone), // Exibe o ícone da moeda
                   ),
                   Container(
+                    // Espaçador entre o ícone e o preço
                     width: 10,
                   ),
                   Text(
-                    real.format(widget.moeda.preco),
-                    style: TextStyle(
+                    // Exibe o preço formatado da moeda
+                    real.format(widget.moeda.preco), // Formata o preço da moeda
+
+                    style: const TextStyle(
+                        // Estilo do texto do preço
                         fontSize: 26,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -1,
@@ -222,54 +344,72 @@ class _mostrar_detalhesState extends State<mostrar_detalhes> {
                 ],
               ),
             ),
-            (quantidade > 0)
+            (quantidade > 0) // Condição para exibir a quantidade comprada
                 ? SizedBox(
+                    // Espaçador para exibir a quantidade comprada
                     width: MediaQuery.of(context).size.width,
                     child: Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(12),
+                      alignment: Alignment.center,
+                      decoration:
+                          BoxDecoration(color: Colors.teal.withOpacity(0.05)),
                       child: Text(
-                        '$quantidade ${widget.moeda.sigla}',
-                        style: TextStyle(
+                        '$quantidade ${widget.moeda.sigla}', // Exibe a quantidade comprada da moeda
+                        style: const TextStyle(
                           fontSize: 20,
                           color: Colors.teal,
                         ),
                       ),
-                      margin: EdgeInsets.only(bottom: 24),
-                      padding: EdgeInsets.all(12),
-                      alignment: Alignment.center,
-                      decoration:
-                          BoxDecoration(color: Colors.teal.withOpacity(0.05)),
                     ),
                   )
                 : Container(
-                    margin: EdgeInsets.only(bottom: 24),
+                    // Contêiner vazio se a quantidade for 0
+                    margin: const EdgeInsets.only(bottom: 24),
                   ),
             Form(
-              key: _form,
+              // Formulário para inserir o valor da compra
+              key: _form, // Chave global do formulário
               child: TextFormField(
-                controller: _valor,
-                style: TextStyle(fontSize: 22),
-                decoration: InputDecoration(
+                controller:
+                    _valor, // Controlador de texto para capturar a entrada do usuário
+                style: const TextStyle(fontSize: 22),
+
+                decoration: const InputDecoration(
+                  // Decoração do campo de entrada
                   border: OutlineInputBorder(),
                   labelText: 'Valor',
                   prefixIcon: Icon(Icons.monetization_on_outlined),
+
                   suffix: Text(
                     'Reais',
                     style: TextStyle(fontSize: 14),
                   ),
                 ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+
+                keyboardType: TextInputType.number, // Tipo de teclado numérico
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly
+                ], // Formatação de entrada para aceitar apenas dígitos
+
                 validator: (value) {
+                  // Função de validação do campo de entrada
                   if (value!.isEmpty) {
-                    return 'Digite o valor da compra';
+                    // Verifica se o campo está vazio
+                    return 'Digite o valor da compra'; // Retorna uma mensagem de erro
                   } else if (double.parse(value) < 50) {
-                    return 'Valor minimo para a compra é R\$ 50';
+                    // Verifica se o valor é menor que 50
+                    return 'Valor mínimo para a compra é R\$ 50'; // Retorna uma mensagem de erro
                   }
-                  return null;
+                  return null; // Retorna nulo se a validação for bem-sucedida
                 },
+
                 onChanged: (value) {
+                  // Função chamada sempre que o valor do campo é alterado
                   setState(() {
-                    quantidade = (value.isEmpty)
+                    // Atualiza o estado do widget
+                    quantidade = (value
+                            .isEmpty) // Atualiza a quantidade com base no valor inserido
                         ? 0
                         : double.parse(value) / widget.moeda.preco;
                   });
@@ -277,18 +417,24 @@ class _mostrar_detalhesState extends State<mostrar_detalhes> {
               ),
             ),
             Container(
+              // Contêiner para o botão de compra
               alignment: Alignment.bottomCenter,
-              margin: EdgeInsets.only(top: 24),
+              margin: const EdgeInsets.only(top: 24),
+
               child: ElevatedButton(
-                  onPressed: comprar,
-                  child: Row(
+                  // Botão de compra
+                  onPressed:
+                      comprar, // Função chamada quando o botão é pressionado
+                  child: const Row(
+                    // Layout do botão
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check),
+                      Icon(Icons.check), // Ícone de marca de seleção
+
                       Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
-                          'Comprar',
+                          'Comprar', // Texto do botão
                           style: TextStyle(fontSize: 20),
                         ),
                       ),
